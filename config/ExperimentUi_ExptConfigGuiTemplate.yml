@@ -79,3 +79,6 @@ hardware:
     description: HighFinesse Wavemeter from Toptica photonics for reading laser wavelengths, with Java applet web interface
     fields:
         uri: str
+  MEMS mirrors:
+    description: Duke MEMS mirrors
+

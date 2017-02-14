@@ -15,6 +15,9 @@ from uiModules.ImportErrorPopup import importErrorPopup
 project=getProject()
 wavemeterEnabled = project.isEnabled('hardware', 'HighFinesse Wavemeter')
 visaEnabled = project.isEnabled('hardware', 'VISA')
+# Note: MEMS are not really external. However, they are not common to all systems and configurations:
+MEMSEnabled = project.isEnabled('hardware', 'MEMS mirrors')
+
 from PyQt5 import QtCore
 
 if wavemeterEnabled:

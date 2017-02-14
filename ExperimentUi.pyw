@@ -285,6 +285,9 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
 
         self.DACUi, self.DACDockWidget = self.instantiateDACUi(self.pulser, "DAC", "dacUi", self.config, self.globalVariablesUi.globalDict)
         self.objectListToSaveContext.append(self.DACUi)
+        
+#        self.MEMSUi, self.MEMSDockWidget = self.instantiateMEMSUi(self.pulser, "MEMS", "MEMSUi", self.config, self.globalVariablesUi.globalDict)
+#        self.objectListToSaveContext.append(self.MEMSUi)
 
 #         self.DDSUi9910 = DDSUi9910.DDSUi(self.config, self.pulser )
 #         self.DDSUi9910.setupUi(self.DDSUi9910)
@@ -308,6 +311,10 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
         self.tabifyDockWidget( self.DDSDockWidget, self.DACDockWidget )
 #        self.tabifyDockWidget( self.DDSDockWidget, self.DDS9910DockWidget )
 #        self.tabifyDockWidget( self.DDS9910DockWidget, self.globalVariablesDock )
+
+#        self.tabifyDockWidget( self.DACDockWidget, self.MEMSDockWidget )
+#        self.tabifyDockWidget( self.MEMSDockWidget, self.globalVariablesDock ) # uncomment and remove next line
+        
         self.tabifyDockWidget( self.DACDockWidget, self.globalVariablesDock )
         self.tabifyDockWidget( self.globalVariablesDock, self.valueHistoryDock )
         self.triggerDockWidget.hide()
@@ -501,6 +508,19 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
         pulser.ppActiveChanged.connect(ui.setDisabled)
         self.tabDict['Scan'].NeedsDDSRewrite.connect(ui.onWriteAll)
         return ui, uiDock
+        
+#    def instantiateMEMSUi(self, pulser, windowName, configName, config, globalDict):
+#        ui = MEMSUi.MEMSUi(pulser, config, configName, globalDict)
+#        ui.setupUi(ui)
+#        uiDock = QtWidgets.QDockWidget(windowName)
+#        uiDock.setWidget(ui)
+#        uiDock.setObjectName(windowName)
+#        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, uiDock)
+#        self.globalVariablesUi.valueChanged.connect(ui.evaluate)
+#        pulser.ppActiveChanged.connect(ui.setDisabled)
+#        self.tabDict['Scan'].NeedsDDSRewrite.connect(ui.onWriteAll)
+#        return ui, uiDock
+
 
     def instantiateShutterUi(self, pulser, windowName, configName, config, globalDict, nameDict, nameSignal):
         ui = ShutterUi.ShutterUi(pulser, configName, 'shutter', self.config, (nameDict, nameSignal), size=49)
@@ -922,6 +942,9 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
                 if FPGAConfig.get('DAC'):
                     ui, _ = self.instantiateDACUi(FPGA, "{0} DAC".format(FPGAName), "{0}.dacUi".format(FPGAName), self.config, self.globalVariablesUi.globalDict)
                     self.objectListToSaveContext.append(ui)
+#                if FPGAConfig.get('MEMS'):
+#                    ui, _ = self.instantiateDDSUi(FPGA, "{0} MEMS".format(FPGAName), "{0}.MEMSUi".format(FPGAName), self.config, self.globalVariablesUi.globalDict)
+#                    self.objectListToSaveContext.append(ui)
                 if FPGAConfig.get('Shutters'):
                     ui, _ = self.instantiateShutterUi(FPGA, "{0} Shutter".format(FPGAName), "{0}.ShutterUi".format(FPGAName), self.config, self.globalVariablesUi.globalDict, None, None)
                     self.objectListToSaveContext.append(ui)
