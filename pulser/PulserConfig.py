@@ -20,10 +20,19 @@ xmlschema = etree.XMLSchema( etree.fromstring("""<?xml version="1.0"?>
       <xs:element type="DDSChannelsType" name="DDSChannels" minOccurs="0"/>
       <xs:element type="CommandMemoryType" name="CommandMemory" minOccurs="0"/>
       <xs:element type="CounterBitsType" name="CounterBits" minOccurs="0"/>
+      <xs:element type="MEMSMirrorsType" name="MEMSMirrors" minOccurs="0"/>
       <xs:element type="DACType" name="DAC" minOccurs="1"/>
       <xs:element type="ADCType" name="ADC" minOccurs="1"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="configurationId" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="MEMSMirrorType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:byte" name="mirrorNo" use="required"/>
+        <xs:attribute type="xs:byte" name="channel" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="DACType">
     <xs:simpleContent>
@@ -117,6 +126,11 @@ xmlschema = etree.XMLSchema( etree.fromstring("""<?xml version="1.0"?>
       <xs:element type="DDSChannelType" name="DDSChannel" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="MEMSMirrorsType">
+    <xs:sequence>
+      <xs:element type="MEMSMirrorType" name="MEMSMirror" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="CommandMemoryType">
     <xs:sequence>
       <xs:element type="CommandMemoryType" name="CommandMemory" maxOccurs="unbounded" minOccurs="0"/>
@@ -148,6 +162,7 @@ class PulserConfig(object):
         self.counterBits = dict()
         self.dac = DAADInfo()
         self.adc = DAADInfo()
+        self.memsMirrors = dict()
         self.ddsChannels = dict()
         self.commandMemorySize = 4096
         self.dataMemorySize = 4096
@@ -181,7 +196,7 @@ def endCommandMemory(parent, elem):
 def endStatusbit(parent, elem):
     a = elem.attrib
     parent.append( (a.get('name'), int(a.get('bitNo'), 0), a.get('active')))
-    
+
 def endShutterbit(parent, elem):
     a = elem.attrib
     parent[int(a.get('bitNo'), 0)] = a.get('name')
@@ -197,7 +212,11 @@ def endDAC(parent, elem):
 def endADC(parent, elem):
     a = elem.attrib
     parent.adc = DAADInfo( int(a.get("numChannels", "0")), a.get("encoding", "None") )
-    
+
+def endMEMSMirror(parent, elem):
+    a = elem.attrib
+    parent[int(a.get('mirrorNo'), 0)] = int(a.get('channel'))
+
     
 starthandler = { 'Pulser': startPulseProgrammer, 
                  'ExtendedWireIns': lambda parent, elem: parent.extendedWireIns,
@@ -205,6 +224,7 @@ starthandler = { 'Pulser': startPulseProgrammer,
                  'ShutterBits': lambda parent, elem: parent.shutterBits,
                  'TriggerBits': lambda parent, elem: parent.triggerBits,
                  'CounterBits': lambda parent, elem: parent.counterBits,
+                 'MEMSMirrors': lambda parent, elem: parent.memsMirrors,
                  'DDSChannels': lambda parent, elem: parent.ddsChannels }
 
 endhandler = { 'Parameter': endParameter,
@@ -214,6 +234,7 @@ endhandler = { 'Parameter': endParameter,
                'ShutterBit': endShutterbit,
                'TriggerBit': endShutterbit,
                'CounterBit': endShutterbit,
+               'MEMSMirror': endMEMSMirror,
                'DAC': endDAC,
                'ADC': endADC,
                'DDSChannel': endDDSChannel }
@@ -237,5 +258,7 @@ def getPulserConfiguration( filename ):
     
 
 if __name__ == "__main__":
-    res = getPulserConfiguration('../config/PulserConfig.xml')
+    #res = getPulserConfiguration('../config/PulserConfig.xml')
+    res = getPulserConfiguration('../FPGA_Ions/IonControl-firmware-8Counters-mems.xml')
+    print()
     print(res)

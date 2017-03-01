@@ -89,6 +89,9 @@ class CombineWrites:
 
 
 class DAC:
+    dacChannelSetting = DACChannelSetting
+    combineWrites = CombineWrites
+
     def __init__(self, pulser):
         self.commandBuffer = list()
         self.autoFlush = True

@@ -81,4 +81,3 @@ hardware:
         uri: str
   MEMS mirrors:
     description: Duke MEMS mirrors
-

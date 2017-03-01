@@ -16,7 +16,8 @@ from .DACTableModel import DACTableModel
 from uiModules.MagnitudeSpinBoxDelegate import MagnitudeSpinBoxDelegate
 from modules.GuiAppearance import restoreGuiState, saveGuiState 
 import logging
-from pulser.DAC import DACChannelSetting, DAC, CombineWrites
+from pulser.DAC import  DAC
+from pulser.MEMSmirror import MEMSmirror
 
 import os
 uipath = os.path.join(os.path.dirname(__file__), '..', 'ui/DDS.ui')
@@ -28,18 +29,18 @@ def extendTo(array, length, defaulttype):
         
 class DACUi(dacForm, dacBase):
     persistSpace = 'DAC'
-    def __init__(self, pulser, config, configName, globalDict, parent=None):
+    def __init__(self, DACClass, pulser, config, configName, globalDict, parent=None):
         self.isSetup = False
         dacBase.__init__(self, parent)
         dacForm.__init__(self)
         self.config = config
-        self.dac = DAC(pulser)
+        self.dac = DACClass(pulser)
         self.channelsConfigName = '{0}.dacExpressionChannels'.format(configName)
         self.autoApplyConfigName = '{0}.autoApply'.format(configName)
         self.guiStateConfigName = '{0}.guiState'.format(configName)
         self.dacChannels = self.config.get(self.channelsConfigName)
         if not self.dacChannels or len(self.dacChannels)!=self.dac.numChannels:
-            self.dacChannels = [DACChannelSetting(globalDict=globalDict) for _ in range(self.dac.numChannels) ] 
+            self.dacChannels = [DACClass.dacChannelSetting(globalDict=globalDict) for _ in range(self.dac.numChannels) ]
         for index, channel in enumerate(self.dacChannels):
             channel.globalDict = globalDict
             channel.onChange = partial( self.onChange, index )
@@ -92,7 +93,7 @@ class DACUi(dacForm, dacBase):
     
     def onWriteAll(self, writeUnchecked=False):
         if len(self.dacChannels) > 0:
-            with CombineWrites(self.dac) as stream:
+            with DACClass.combineWrites(self.dac) as stream:
                 for channel, settings in enumerate(self.dacChannels):
                     if writeUnchecked or settings.resetAfterPP:
                         stream.setVoltage(channel, settings.outputVoltage, autoApply=self.autoApply, applyAll=True)

@@ -59,6 +59,8 @@ import scan.FitHistogramsEvaluation
 import Experiment_rc
 from AWG.AWGUi import AWGUi
 from AWG import AWGDevices
+from pulser.DAC import DAC
+from pulser.MEMSmirror import MEMSmirror
 
 setID = ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID
 if __name__=='__main__': #imports that aren't just definitions
@@ -183,6 +185,13 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
                 importErrorPopup('APT Motion error {0}'.format(e))
         from externalParameter.ExternalParameterBase import InstrumentDict
 
+        self.MEMSEnabled = self.project.isEnabled('hardware', 'MEMS mirrors')
+        if self.MEMSEnabled:
+            try:
+                import pulser.MEMSmirror
+            except ImportError:
+                importErrorPopup('MEMS mirrors')
+
         # setup FPGAs
         self.setupFPGAs()
 
@@ -285,9 +294,10 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
 
         self.DACUi, self.DACDockWidget = self.instantiateDACUi(self.pulser, "DAC", "dacUi", self.config, self.globalVariablesUi.globalDict)
         self.objectListToSaveContext.append(self.DACUi)
-        
-#        self.MEMSUi, self.MEMSDockWidget = self.instantiateMEMSUi(self.pulser, "MEMS", "MEMSUi", self.config, self.globalVariablesUi.globalDict)
-#        self.objectListToSaveContext.append(self.MEMSUi)
+
+        if self.MEMSEnabled:
+            self.MEMSUi, self.MEMSDockWidget = self.instantiateMEMSUi(self.pulser, "MEMS", "MEMSUi", self.config, self.globalVariablesUi.globalDict)
+            self.objectListToSaveContext.append(self.MEMSUi)
 
 #         self.DDSUi9910 = DDSUi9910.DDSUi(self.config, self.pulser )
 #         self.DDSUi9910.setupUi(self.DDSUi9910)
@@ -312,10 +322,12 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
 #        self.tabifyDockWidget( self.DDSDockWidget, self.DDS9910DockWidget )
 #        self.tabifyDockWidget( self.DDS9910DockWidget, self.globalVariablesDock )
 
-#        self.tabifyDockWidget( self.DACDockWidget, self.MEMSDockWidget )
-#        self.tabifyDockWidget( self.MEMSDockWidget, self.globalVariablesDock ) # uncomment and remove next line
-        
-        self.tabifyDockWidget( self.DACDockWidget, self.globalVariablesDock )
+        if self.MEMSEnabled:
+            self.tabifyDockWidget(self.DACDockWidget, self.MEMSDockWidget)
+            self.tabifyDockWidget(self.MEMSDockWidget, self.globalVariablesDock)
+        else:
+            self.tabifyDockWidget( self.DACDockWidget, self.globalVariablesDock )
+
         self.tabifyDockWidget( self.globalVariablesDock, self.valueHistoryDock )
         self.triggerDockWidget.hide()
         self.preferencesUiDock.hide()
@@ -499,7 +511,7 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
         return ui, uiDock
 
     def instantiateDACUi(self, pulser, windowName, configName, config, globalDict):
-        ui = DACUi(pulser, config, configName, globalDict)
+        ui = DACUi(DAC, pulser, config, configName, globalDict)
         ui.setupUi(ui)
         uiDock = QtWidgets.QDockWidget(windowName)
         uiDock.setObjectName(windowName)
@@ -508,18 +520,20 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
         pulser.ppActiveChanged.connect(ui.setDisabled)
         self.tabDict['Scan'].NeedsDDSRewrite.connect(ui.onWriteAll)
         return ui, uiDock
-        
-#    def instantiateMEMSUi(self, pulser, windowName, configName, config, globalDict):
-#        ui = MEMSUi.MEMSUi(pulser, config, configName, globalDict)
-#        ui.setupUi(ui)
-#        uiDock = QtWidgets.QDockWidget(windowName)
-#        uiDock.setWidget(ui)
-#        uiDock.setObjectName(windowName)
-#        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, uiDock)
-#        self.globalVariablesUi.valueChanged.connect(ui.evaluate)
-#        pulser.ppActiveChanged.connect(ui.setDisabled)
-#        self.tabDict['Scan'].NeedsDDSRewrite.connect(ui.onWriteAll)
-#        return ui, uiDock
+
+
+    def instantiateMEMSUi(self, pulser, windowName, configName, config, globalDict):
+
+        ui = DACUi(MEMSmirror, pulser, config, configName, globalDict)
+        ui.setupUi(ui)
+        uiDock = QtWidgets.QDockWidget(windowName)
+        uiDock.setWidget(ui)
+        uiDock.setObjectName(windowName)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, uiDock)
+        self.globalVariablesUi.valueChanged.connect(ui.evaluate)
+        pulser.ppActiveChanged.connect(ui.setDisabled)
+        self.tabDict['Scan'].NeedsDDSRewrite.connect(ui.onWriteAll)
+        return ui, uiDock
 
 
     def instantiateShutterUi(self, pulser, windowName, configName, config, globalDict, nameDict, nameSignal):

@@ -1,44 +1,134 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Feb 19 14:53:26 2013
-
-@author: plmaunz
-"""
+# *****************************************************************
+# IonControl:  Copyright 2016 Sandia Corporation
+# This Software is released under the GPL license detailed
+# in the file "license.txt" in the top-level IonControl directory
+# *****************************************************************
 
 import logging
-import math
-import struct
+#import struct
 
-from pulser.PulserHardwareClient import check
-from modules.magnitude import mg
+#from pulser.PulserHardwareClient import check
+from modules.quantity import Q
+from modules.Expression import Expression
+from pulser.Encodings import encode, decode
+from gui.ExpressionValue import ExpressionValue
+from modules.descriptor import SetterProperty
+
 
 class MEMSException(Exception):
     pass
 
-class MEMSmirror:
-    def __init__(self, pulser):
-        self.pulser = pulser
 
-    def setVoltage(self, channel, mirror, voltage):
-        intVoltage = int( & 0xffffffffffff
-        self.sendCommand(channel, 0, intVoltage)
-        return intFrequency
+class MEMSMirrorSetting(object):
+    expression = Expression()
+
+    def __init__(self, globalDict=None):
+        self._globalDict = None
+        self._voltage = ExpressionValue(None, self._globalDict)
+        self.enabled = False
+        self.name = ""
+        self.resetAfterPP = False
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self.__dict__.setdefault('resetAfterPP', False)
+        self.__dict__.setdefault('_globalDict', dict())
+
+    def __getstate__(self):
+        dictcopy = dict(self.__dict__)
+        dictcopy.pop('_globalDict', None)
+        return dictcopy
+
+    @property
+    def outputVoltage(self):
+        return self._voltage.value if self.enabled else Q(0, 'V')
+
+    @property
+    def globalDict(self):
+        return self._globalDict
+
+    @globalDict.setter
+    def globalDict(self, globalDict):
+        self._globalDict = globalDict
+        self._voltage.globalDict = globalDict
+
+    @property
+    def voltage(self):
+        return self._voltage.value
+
+    @voltage.setter
+    def voltage(self, v):
+        self._voltage.value = v
+
+    @property
+    def voltageText(self):
+        return self._voltage.string
+
+    @voltageText.setter
+    def voltageText(self, s):
+        self._voltage.string = s
+
+    @SetterProperty
+    def onChange(self, onChange):
+        self._voltage.valueChanged.connect(onChange)
+
+
+class CombineWrites:
+    def __init__(self, mems):
+        self.restoreValue = True
+        self.mems = mems
+
+    def __enter__(self):
+        self.restoreValue = self.mems.autoFlush
+        self.mems.autoFlush = False
+        return self.mems
+
+    def __exit__(self, exittype, value, traceback):
+        self.mems.autoFlush = self.restoreValue
+        self.mems.flush()
+
+
+class MEMSmirror:
+    dacChannelSetting = MEMSMirrorSetting  # for GUI (using DACUi)
+    combineWrites = CombineWrites
+
+    def __init__(self, pulser):
+        self.commandBuffer = list()
+        self.autoFlush = True
+        self.pulser = pulser
+        config = self.pulser.pulserConfiguration()
+        self.numChannels = len(config.memsMirrors) if config else 0  # must be called numChannels to use DACUi
+        self.memsInfo = config.memsMirrors if config else []
+
+    def rawToMagnitude(self, raw):
+        return decode(raw, 'MEMS_VOLTAGE')
+
+    def setVoltage(self, mirror, voltage, autoApply=False, applyAll=False):
+        intVoltage = encode(abs(voltage), 'MEMS_VOLTAGE')
+        code = (2 if applyAll else 3) if autoApply else 0
+        voltageSign = True if voltage >= 0 else False
+        data = ((mirror & 0b11) << 17) | (voltageSign << 16) | intVoltage  # always 4 mirrors per address
+        channel = self.memsInfo[mirror]
+        self.sendCommand(channel, code, data)
+        return intVoltage
+
+    def flush(self):
+        self.pulser.setMultipleExtendedWireIn(self.commandBuffer)
+        self.commandBuffer = list()
 
     def sendCommand(self, channel, cmd, data):
+        logger = logging.getLogger(__name__)
         if self.pulser:
-            #ALL THIS TO BE UPDATED YET!!!!
-            check( self.pulser.SetWireInValue(0x03, (channel & 0xff)<<4 | (cmd & 0xf) ), "MEMS" )
-            self.pulser.setExtendedWireIn(0x12, data)
-            self.pulser.UpdateWireIns()
-            check( self.pulser.ActivateTriggerIn(0x40, ?), "MEMS trigger")
-            self.pulser.UpdateWireIns()
+            self.commandBuffer.extend([(0x12, data),
+                                       (0x1e, (1 << 13) | (channel & 0xff) << 4 | (cmd & 0xf))])
+            if self.autoFlush:
+                self.flush()
         else:
-            logging.getLogger(__name__).warning( "Pulser not available" )
+            logger.warning("Pulser not available")
 
-        
+    def update(self, channelmask):
+        pass
+
+
 if __name__ == "__main__":
-    import modules.magnitude as magnitude
-    
-    mems = MEMSmirror(None)
-    mems.setVoltage(channel, 1, magnitude.mg(1, 'V'))
-    
+    ad = MEMSmirror(None)
