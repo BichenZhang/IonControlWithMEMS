@@ -293,10 +293,10 @@
         <CounterBit bitNo="48" name="timeTick"/>
     </CounterBits>
     <MEMSMirrors>
-        <MEMSMirror mirrorNo="0" channel="10"/>
-        <MEMSMirror mirrorNo="1" channel="10"/>
-        <MEMSMirror mirrorNo="2" channel="10"/>
-        <MEMSMirror mirrorNo="3" channel="10"/>
+        <MEMSMirror mirrorNo="0" channel="16"/>
+        <MEMSMirror mirrorNo="1" channel="16"/>
+        <MEMSMirror mirrorNo="2" channel="16"/>
+        <MEMSMirror mirrorNo="3" channel="16"/>
     </MEMSMirrors>
     <DAC numChannels="16" encoding="DAC8568_VOLTAGE" />
     <ADC numChannels="8" encoding="ADC7606_VOLTAGE" dedicatedfirstChannelNo="16" />

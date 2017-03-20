@@ -127,8 +127,10 @@ class DAC:
             
     def update(self, channelmask):
         pass
+
+    def reset(self, dac):
+        pass  # for now do nothing... but needs to be defined
         
         
 if __name__ == "__main__":
     ad = DAC(None)
-    

@@ -35,6 +35,7 @@ class DACUi(dacForm, dacBase):
         dacForm.__init__(self)
         self.config = config
         self.dac = DACClass(pulser)
+        self.DACClass = DACClass
         self.channelsConfigName = '{0}.dacExpressionChannels'.format(configName)
         self.autoApplyConfigName = '{0}.autoApply'.format(configName)
         self.guiStateConfigName = '{0}.guiState'.format(configName)
@@ -64,7 +65,7 @@ class DACUi(dacForm, dacBase):
         try:
             self.onWriteAll( writeUnchecked=True )
         except Exception as e:
-            logging.getLogger(__name__).warning( "Ignored error while setting dac: {0}".format(e) )
+            logging.getLogger(self.DACClass.__name__).warning( "Ignored error while setting dac or mems: {0}".format(e) )
         self.onApply()
         self.dacTableModel.voltageChanged.connect( self.onVoltage )
         self.dacTableModel.enableChanged.connect( self.onEnableChanged )
@@ -93,7 +94,7 @@ class DACUi(dacForm, dacBase):
     
     def onWriteAll(self, writeUnchecked=False):
         if len(self.dacChannels) > 0:
-            with DACClass.combineWrites(self.dac) as stream:
+            with self.DACClass.combineWrites(self.dac) as stream:
                 for channel, settings in enumerate(self.dacChannels):
                     if writeUnchecked or settings.resetAfterPP:
                         stream.setVoltage(channel, settings.outputVoltage, autoApply=self.autoApply, applyAll=True)
@@ -105,14 +106,26 @@ class DACUi(dacForm, dacBase):
         
     def onApply(self):
         if self.dacChannels:
-            self.dac.setVoltage(0, self.dacChannels[0].outputVoltage, autoApply=True, applyAll=True )
+            if self.DACClass == DAC:
+                self.dac.setVoltage(0, self.dacChannels[0].outputVoltage, autoApply=True, applyAll=True )
+            else:
+                self.onWriteAll()  # Apply is meaningless unless we want to send an "update" message or pulse somewhere.
         
     def onReset(self):
-        self.dac.reset(0xff)
-        
+        #self.dac.reset(0xff)
+        self.dac.reset(self.dac)
+
     def onChange(self, index, name, value, string, origin ):
         if self.isSetup and origin != 'value':
             self.dacTableModel.setVoltage(self.dacTableModel.createIndex(index, 2), value)
+
+    def evaluate(self, name):  # used on global variable update
+        for channel, settings in enumerate(self.dacChannels):
+            if settings.evaluateVoltage( self.globalDict ):
+                self.dac.setVoltage(channel, settings.outputVoltage)
+        if self.autoApply:
+            self.onApply()
+        self.tableView.viewport().repaint()
 
              
 if __name__ == "__main__":

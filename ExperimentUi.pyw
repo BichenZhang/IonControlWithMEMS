@@ -523,7 +523,6 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
 
 
     def instantiateMEMSUi(self, pulser, windowName, configName, config, globalDict):
-
         ui = DACUi(MEMSmirror, pulser, config, configName, globalDict)
         ui.setupUi(ui)
         uiDock = QtWidgets.QDockWidget(windowName)

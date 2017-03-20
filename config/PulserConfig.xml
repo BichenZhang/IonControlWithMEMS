@@ -1642,7 +1642,7 @@
 		<ADC numChannels="8" encoding="ADC7606_VOLTAGE" dedicatedfirstChannelNo="16" />
 	</Pulser>
 		<Pulser configurationId="0x7002">
-		<Description>Duke breakout board v2, Duke Red configuration, Serial 2 is OUT2[5]</Description>
+		<Description>Duke breakout board v2, Duke Red MEMS configuration, Serial 2 is OUT2[5]</Description>
 		<ExtendedWireIns>
             <Parameter address="0x20" default="0" bitmask="0xffffffffffffffff" categories="PI Loop Parameters, Channel 0" shift="0" name="Ch 0 p Coefficient" encoding="None" enabled="True"/>
             <Parameter address="0x21" default="0" bitmask="0xffffffffffffffff" categories="PI Loop Parameters, Channel 0" shift="0" name="Ch 0 i Coefficient" encoding="None" enabled="True"/>
@@ -1944,8 +1944,13 @@
 			<CounterBit bitNo="47" name="PI 7"/>
 			<CounterBit bitNo="48" name="timeTick"/>
 		</CounterBits>
+	<MEMSMirrors>
+        <MEMSMirror mirrorNo="0" channel="16"/>
+        <MEMSMirror mirrorNo="1" channel="16"/>
+        <MEMSMirror mirrorNo="2" channel="16"/>
+        <MEMSMirror mirrorNo="3" channel="16"/>
+    </MEMSMirrors>
 		<DAC numChannels="16" encoding="DAC8568_VOLTAGE" />
 		<ADC numChannels="8" encoding="ADC7606_VOLTAGE" dedicatedfirstChannelNo="16" />
-		<MEMS numChannels="4" encoding="MEMS_VOLTAGE" />
 	</Pulser>
 </PulserList>

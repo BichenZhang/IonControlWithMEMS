@@ -104,12 +104,16 @@ class MEMSmirror:
         return decode(raw, 'MEMS_VOLTAGE')
 
     def setVoltage(self, mirror, voltage, autoApply=False, applyAll=False):
-        intVoltage = encode(abs(voltage), 'MEMS_VOLTAGE')
-        code = (2 if applyAll else 3) if autoApply else 0
-        voltageSign = True if voltage >= 0 else False
-        data = ((mirror & 0b11) << 17) | (voltageSign << 16) | intVoltage  # always 4 mirrors per address
+        logger = logging.getLogger(__name__)
+        intVoltage = encode(voltage, 'MEMS_VOLTAGE')
+        #int(round(2 ** 48 * frequency.m_as('GHz'))) & 0xffffffffffff
+        #intVoltage = int(round(2**16 * voltage.m_as('V'))) & 0xffff
+        data = ((0b1 << 18) | ((mirror & 0b11) << 16) | intVoltage)  # the preceding 1 is for performing immediate latch; always 4 mirrors per address - 2 bits
         channel = self.memsInfo[mirror]
-        self.sendCommand(channel, code, data)
+        self.sendCommand(channel, 0, data)
+        logger.warning("mirror {0}".format(mirror))
+        logger.warning("voltage {0}".format(intVoltage))
+        logger.warning("data {0}".format(hex(data)))
         return intVoltage
 
     def flush(self):
@@ -129,6 +133,15 @@ class MEMSmirror:
     def update(self, channelmask):
         pass
 
+    def reset(self, mems):
+        # print("numChannels = {0}".format(self.numChannels))
+        # for j in range(self.numChannels):
+        #     print("j = {0}".format(j))
+        #     self.setVoltage(j, Q(0, 'V'))
+        if self.numChannels > 0:
+            with self.combineWrites(mems) as stream:
+                for mirror in range(self.numChannels):
+                    stream.setVoltage(mirror,  Q(0, 'V'))
 
 if __name__ == "__main__":
     ad = MEMSmirror(None)
