@@ -108,9 +108,10 @@ class MEMSmirror:
         intVoltage = encode(voltage, 'MEMS_VOLTAGE')
         #int(round(2 ** 48 * frequency.m_as('GHz'))) & 0xffffffffffff
         #intVoltage = int(round(2**16 * voltage.m_as('V'))) & 0xffff
-        data = ((0b1 << 18) | ((mirror & 0b11) << 16) | intVoltage)  # the preceding 1 is for performing immediate latch; always 4 mirrors per address - 2 bits
+        cmd = (mirror + 1) # 0 corresponds to waiting for external trigger and setting all for ppp. cmd=1-4 => mirror 0-3, latch now.
+        data = intVoltage << (mirror*16)
         channel = self.memsInfo[mirror]
-        self.sendCommand(channel, 0, data)
+        self.sendCommand(channel, cmd, data)
         logger.warning("mirror {0}".format(mirror))
         logger.warning("voltage {0}".format(intVoltage))
         logger.warning("data {0}".format(hex(data)))
