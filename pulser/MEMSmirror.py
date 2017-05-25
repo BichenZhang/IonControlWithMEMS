@@ -105,17 +105,24 @@ class MEMSmirror:
 
     def setVoltage(self, mirror, voltage, autoApply=False, applyAll=False):
         logger = logging.getLogger(__name__)
-        intVoltage = encode(voltage, 'MEMS_VOLTAGE')
+        #intVoltage = encode(voltage, 'MEMS_VOLTAGE')
         #int(round(2 ** 48 * frequency.m_as('GHz'))) & 0xffffffffffff
-        #intVoltage = int(round(2**16 * voltage.m_as('V'))) & 0xffff
-        cmd = (mirror + 1) # 0 corresponds to waiting for external trigger and setting all for ppp. cmd=1-4 => mirror 0-3, latch now.
-        data = intVoltage << (mirror*16)
+
+        intVoltage = (int(round(2 ** 16 * (voltage.m_as('V')))) & 0xffff >> 1)
+        cmd = (mirror + 1)  # 0 corresponds to waiting for external trigger and setting all for ppp. cmd=1-4 => mirror 0-3, latch now.
+        data = self.twos_comp(intVoltage, 16)
         channel = self.memsInfo[mirror]
         self.sendCommand(channel, cmd, data)
         logger.warning("mirror {0}".format(mirror))
         logger.warning("voltage {0}".format(intVoltage))
         logger.warning("data {0}".format(hex(data)))
         return intVoltage
+
+    def twos_comp(self, val, bits):
+        # compute the 2's complement of an int val
+        if (val & (1 << (bits - 1))) != 0:  # if sign bit is set e.g., 8bit: 128-255
+            val -= (1 << bits)  # compute negative value
+        return val  # return positive value as is
 
     def flush(self):
         self.pulser.setMultipleExtendedWireIn(self.commandBuffer)
