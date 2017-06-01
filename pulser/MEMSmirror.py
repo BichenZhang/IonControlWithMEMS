@@ -5,7 +5,7 @@
 # *****************************************************************
 
 import logging
-#import struct
+import numpy as np
 
 #from pulser.PulserHardwareClient import check
 from modules.quantity import Q
@@ -108,14 +108,14 @@ class MEMSmirror:
         #intVoltage = encode(voltage, 'MEMS_VOLTAGE')
         #int(round(2 ** 48 * frequency.m_as('GHz'))) & 0xffffffffffff
 
-        intVoltage = (int(round(2 ** 16 * (voltage.m_as('V')))) & 0xffff >> 1)
+        intVoltage = np.int16((round(2 ** 16 * (voltage.m_as('V')))) & 0xffff >> 1)
         cmd = (mirror + 1)  # 0 corresponds to waiting for external trigger and setting all for ppp. cmd=1-4 => mirror 0-3, latch now.
-        data = self.twos_comp(intVoltage, 16)
+        #data = self.twos_comp(intVoltage, 16)
         channel = self.memsInfo[mirror]
-        self.sendCommand(channel, cmd, data)
+        self.sendCommand(channel, cmd, intVoltage)
         logger.warning("mirror {0}".format(mirror))
         logger.warning("voltage {0}".format(intVoltage))
-        logger.warning("data {0}".format(hex(data)))
+        logger.warning("data {0}".format(binary(data)))
         return intVoltage
 
     def twos_comp(self, val, bits):
