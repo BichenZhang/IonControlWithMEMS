@@ -115,7 +115,7 @@ class MEMSmirror:
         self.sendCommand(channel, cmd, intVoltage)
         logger.warning("mirror {0}".format(mirror))
         logger.warning("voltage {0}".format(intVoltage))
-        logger.warning("data {0}".format(bin(data)))
+        logger.warning("bin int16Voltage {0}".format(bin(intVoltage)))
         return intVoltage
 
     def twos_comp(self, val, bits):
