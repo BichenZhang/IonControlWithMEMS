@@ -113,7 +113,7 @@ class MEMSmirror:
         self.sendCommand(channel, cmd, intVoltage)
         logger.warning("mirror {0}".format(mirror))
         logger.warning("voltage {0}".format(intVoltage))
-        logger.warning("bin int16Voltage {0}".format())
+        #logger.warning("bin int16Voltage {0}".format())
         return intVoltage
 
     def flush(self):
