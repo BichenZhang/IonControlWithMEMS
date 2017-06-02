@@ -106,7 +106,8 @@ class MEMSmirror:
     def setVoltage(self, mirror, voltage, autoApply=False, applyAll=False):
         logger = logging.getLogger(__name__)
         #intVoltage = encode(voltage, 'MEMS_VOLTAGE')
-        intVoltage = struct.pack("=h",int(2 ** 15 * (voltage.m_as('V')/10)))
+        #intVoltage = struct.pack("=h",int(2 ** 15 * (voltage.m_as('V')/10)))
+        intVoltage = int(2 ** 15 * (voltage.m_as('V') / 10))
         cmd = (mirror + 1)  # 0 corresponds to waiting for external trigger and setting all for ppp. cmd=1-4 => mirror 0-3, latch now.
         channel = self.memsInfo[mirror]
         self.sendCommand(channel, cmd, intVoltage)
