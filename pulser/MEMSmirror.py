@@ -5,7 +5,7 @@
 # *****************************************************************
 
 import logging
-import numpy as np
+import struct
 
 #from pulser.PulserHardwareClient import check
 from modules.quantity import Q
