@@ -6,6 +6,7 @@
 
 import os.path
 import shutil
+import ast
 from functools import partial
 
 import logging
@@ -15,6 +16,7 @@ from PyQt5.Qsci import QsciScintilla
 import logging
 from datetime import datetime
 from ProjectConfig.Project import getProject
+from expressionFunctions.UserFuncImporter import userFuncLoader
 from modules.PyqtUtility import BlockSignals
 from uiModules.KeyboardFilter import KeyListFilter
 from pulseProgram.PulseProgramSourceEdit import PulseProgramSourceEdit
@@ -22,13 +24,13 @@ from uiModules.MagnitudeSpinBoxDelegate import MagnitudeSpinBoxDelegate
 from expressionFunctions.ExprFuncDecorator import ExprFunUpdate, ExpressionFunctions, UserExprFuncs, SystemExprFuncs
 from expressionFunctions.UserFunctions import constLookup, localFunctions
 from inspect import isfunction
-import importlib
 import inspect
 from pathlib import Path
 from gui.ExpressionValue import ExpressionValue
 import copy
 from modules.Utility import unique
 from gui.FileTree import ensurePath, onExpandOrCollapse, FileTreeMixin, OptionsWindow, OrderedList
+from expressionFunctions.UserFuncASTWalker import UserFuncAnalyzer
 
 uipath = os.path.join(os.path.dirname(__file__), '..', 'ui/UserFunctionsEditor.ui')
 EditorWidget, EditorBase = PyQt5.uic.loadUiType(uipath)
@@ -166,6 +168,7 @@ class UserFunctionsEditor(FileTreeMixin, EditorWidget, EditorBase):
         self.experimentUi = experimentUi
         self.globalDict = globalDict
         self.docDict = dict()
+        #self.ASTWalker = CodeAnalyzer()
         self.configDirFolder = 'UserFunctions'
         self.configname = 'UserFunctionsEditor'
         self.defaultDir = Path(getProject().configDir + '/' + self.configDirFolder)
@@ -363,8 +366,6 @@ class UserFunctionsEditor(FileTreeMixin, EditorWidget, EditorBase):
                         with fullname.open('w') as f:
                             newFileText = '#' + shortname + ' created ' + str(datetime.now()) + '\n\n'
                             f.write(newFileText)
-                            defaultImportText = 'from expressionFunctions.ExprFuncDecorator import userfunc\n\n'
-                            f.write(defaultImportText)
                     except Exception as e:
                         message = "Unable to create new file {0}: {1}".format(shortname, e)
                         logger.error(message)
@@ -422,9 +423,14 @@ class UserFunctionsEditor(FileTreeMixin, EditorWidget, EditorBase):
                 logger.info('{0} saved'.format(self.script.fullname))
             self.initcode = copy.copy(self.script.code)
         try:
-            importlib.machinery.SourceFileLoader("UserFunctions", str(self.script.fullname)).load_module()
+            userFuncLoader(self.script.fullname)
             self.tableModel.updateData()
-            ExprFunUpdate.dataChanged.emit('__exprfunc__')
+            top = ast.parse(self.script.fullname.read_text())
+            analyzer = UserFuncAnalyzer()
+            analyzer.visit(top)
+            upd_func_list = analyzer.upd_funcs
+            for fname in upd_func_list:
+                ExprFunUpdate.dataChanged.emit(fname)
             self.statusLabel.setText("Successfully updated {0} at {1}".format(self.script.fullname.name, str(datetime.now())))
             self.statusLabel.setStyleSheet('color: green')
         except SyntaxError as e:
