@@ -196,10 +196,10 @@
         <ShutterBit bitNo="9" name="External 2-1"/>
         <ShutterBit bitNo="10" name="External 2-2"/>
         <ShutterBit bitNo="11" name="External 2-3"/>
-        <ShutterBit bitNo="12" name="External 2-4"/>
-        <ShutterBit bitNo="13" name="External 2-5"/>
-        <ShutterBit bitNo="14" name="External 2-6"/>
-        <ShutterBit bitNo="15" name="unused"/>
+        <ShutterBit bitNo="12" name="MEMS Reserved Trig"/>
+        <ShutterBit bitNo="13" name="MEMS Reserved Data"/>
+        <ShutterBit bitNo="14" name="DAC Reserved Trig"/>
+        <ShutterBit bitNo="15" name="DAC Reserved Data"/>
         <ShutterBit bitNo="16" name="External 3-0"/>
         <ShutterBit bitNo="17" name="External 3-1"/>
         <ShutterBit bitNo="18" name="External 3-2"/>
@@ -251,6 +251,7 @@
         <TriggerBit bitNo="14" name="PI 6 reset"/>
         <TriggerBit bitNo="15" name="PI 7 reset"/>
         <TriggerBit bitNo="16" name="DAC update"/>
+        <TriggerBit bitNo="17" name="MEMS update"/>
     </TriggerBits>
     <DDSChannels>
         <DDSChannel channel="0" chip="AD9912" shutter="24"/>
@@ -293,10 +294,10 @@
         <CounterBit bitNo="48" name="timeTick"/>
     </CounterBits>
     <MEMSMirrors>
-        <MEMSMirror mirrorNo="0" channel="16"/>
-        <MEMSMirror mirrorNo="1" channel="16"/>
-        <MEMSMirror mirrorNo="2" channel="16"/>
-        <MEMSMirror mirrorNo="3" channel="16"/>
+        <MEMSMirror mirrorNo="0" channel="1"/>
+        <MEMSMirror mirrorNo="1" channel="1"/>
+        <MEMSMirror mirrorNo="2" channel="1"/>
+        <MEMSMirror mirrorNo="3" channel="1"/>
     </MEMSMirrors>
     <DAC numChannels="16" encoding="DAC8568_VOLTAGE" />
     <ADC numChannels="8" encoding="ADC7606_VOLTAGE" dedicatedfirstChannelNo="16" />
