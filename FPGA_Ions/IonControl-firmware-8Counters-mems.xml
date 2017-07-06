@@ -250,8 +250,9 @@
         <TriggerBit bitNo="13" name="PI 5 reset"/>
         <TriggerBit bitNo="14" name="PI 6 reset"/>
         <TriggerBit bitNo="15" name="PI 7 reset"/>
-        <TriggerBit bitNo="16" name="DAC update"/>
-        <TriggerBit bitNo="17" name="MEMS update"/>
+        <TriggerBit bitNo="16" name="ADC DAC"/>
+        <TriggerBit bitNo="17" name="DAC update"/>
+        <TriggerBit bitNo="18" name="MEMS update"/>
     </TriggerBits>
     <DDSChannels>
         <DDSChannel channel="0" chip="AD9912" shutter="24"/>
