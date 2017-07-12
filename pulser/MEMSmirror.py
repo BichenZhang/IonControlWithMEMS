@@ -27,7 +27,7 @@ class MEMSMirrorSetting(object):
         self._voltage = ExpressionValue(None, self._globalDict)
         self.enabled = False
         self.name = ""
-        self.resetAfterPP = False
+        self.resetAfterPP = True
 
     def __setstate__(self, state):
         self.__dict__ = state
@@ -104,15 +104,11 @@ class MEMSmirror:
         return decode(raw, 'MEMS_VOLTAGE')
 
     def setVoltage(self, mirror, voltage, autoApply=False, applyAll=False):
-        #logger = logging.getLogger(__name__)
         intVoltage = encode(voltage, 'MEMS_VOLTAGE')
         intVoltage = int(round(2 ** 15 * (voltage.m_as('V') / 10)))
-        cmd = mirror #+ 1)  # 4 corresponds to waiting for external trigger and setting all for ppp. cmd=0-3 => mirror 0-3, latch now.
+        cmd = mirror # 4 corresponds to waiting for external trigger and setting all for ppp. cmd=0-3 => mirror 0-3, latch now.
         channel = self.memsInfo[mirror]
         self.sendCommand(channel, cmd, intVoltage)
-        #logger.warning("mirror {0}".format(mirror))
-        #logger.warning("voltage {0}".format(intVoltage))
-        #logger.warning("bin int16Voltage {0}".format())
         return intVoltage
 
     def flush(self):
