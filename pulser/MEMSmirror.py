@@ -27,7 +27,7 @@ class MEMSMirrorSetting(object):
         self._voltage = ExpressionValue(None, self._globalDict)
         self.enabled = False
         self.name = ""
-        self.resetAfterPP = True
+        self.resetAfterPP = False
 
     def __setstate__(self, state):
         self.__dict__ = state
