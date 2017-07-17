@@ -6,6 +6,7 @@
 
 import logging
 import struct
+from time import sleep, clock
 
 #from pulser.PulserHardwareClient import check
 from modules.quantity import Q
@@ -13,7 +14,6 @@ from modules.Expression import Expression
 from pulser.Encodings import encode, decode
 from gui.ExpressionValue import ExpressionValue
 from modules.descriptor import SetterProperty
-
 
 class MEMSException(Exception):
     pass
@@ -27,7 +27,7 @@ class MEMSMirrorSetting(object):
         self._voltage = ExpressionValue(None, self._globalDict)
         self.enabled = False
         self.name = ""
-        self.resetAfterPP = True
+        self.resetAfterPP = False
 
     def __setstate__(self, state):
         self.__dict__ = state
@@ -99,6 +99,7 @@ class MEMSmirror:
         config = self.pulser.pulserConfiguration()
         self.numChannels = len(config.memsMirrors) if config else 0  # must be called numChannels to use DACUi
         self.memsInfo = config.memsMirrors if config else []
+        self.lastFlush = 0
 
     def rawToMagnitude(self, raw):
         return decode(raw, 'MEMS_VOLTAGE')
@@ -112,17 +113,23 @@ class MEMSmirror:
         return intVoltage
 
     def flush(self):
+        # If writes happen too quick, messages seem to get lost. This is a hack to help
+        # not do that.
+        if clock() - self.lastFlush < 0.1:
+            sleep(0.1)
+        self.lastFlush = clock()
+
         self.pulser.setMultipleExtendedWireIn(self.commandBuffer)
         self.commandBuffer = list()
 
     def sendCommand(self, channel, cmd, data):
-        logger = logging.getLogger(__name__)
         if self.pulser:
             self.commandBuffer.extend([(0x12, data),
                                        (0x1e, (1 << 13) | (channel & 0xff) << 4 | (cmd & 0xf))])
             if self.autoFlush:
                 self.flush()
         else:
+            logger = logging.getLogger(__name__)
             logger.warning("Pulser not available")
 
     def update(self, channelmask):
