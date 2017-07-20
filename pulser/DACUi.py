@@ -44,7 +44,7 @@ class DACUi(dacForm, dacBase):
             self.dacChannels = [DACClass.dacChannelSetting(globalDict=globalDict) for _ in range(self.dac.numChannels) ]
         for index, channel in enumerate(self.dacChannels):
             channel.globalDict = globalDict
-            channel.onChange = partial( self.onChange, index )
+            channel.onChange = partial(self.onChange, index)
         self.autoApply = self.config.get(self.autoApplyConfigName, True)
         self.decimation = defaultdict( lambda: StaticDecimation(Q(30, 's')))
         self.persistence = DBPersist()
@@ -66,7 +66,8 @@ class DACUi(dacForm, dacBase):
             self.onWriteAll( writeUnchecked=True )
         except Exception as e:
             logging.getLogger(self.DACClass.__name__).warning( "Ignored error while setting dac or mems: {0}".format(e) )
-        self.onApply()
+        if self.DACClass != MEMSmirror:
+            self.onApply()
         self.dacTableModel.voltageChanged.connect( self.onVoltage )
         self.dacTableModel.enableChanged.connect( self.onEnableChanged )
         restoreGuiState(self, self.config.get(self.guiStateConfigName))
@@ -93,11 +94,11 @@ class DACUi(dacForm, dacBase):
         self.persistence.persist(self.persistSpace, source, time, value, minval, maxval, unit)
     
     def onWriteAll(self, writeUnchecked=False):
-        if len(self.dacChannels) > 0:
-            with self.DACClass.combineWrites(self.dac) as stream:
-                for channel, settings in enumerate(self.dacChannels):
-                    if writeUnchecked or settings.resetAfterPP:
-                        stream.setVoltage(channel, settings.outputVoltage, autoApply=self.autoApply, applyAll=True)
+            if len(self.dacChannels) > 0:
+                with self.DACClass.combineWrites(self.dac) as stream:
+                    for channel, settings in enumerate(self.dacChannels):
+                        if writeUnchecked or settings.resetAfterPP:
+                            stream.setVoltage(channel, settings.outputVoltage, autoApply=self.autoApply, applyAll=True)
 
     def saveConfig(self):
         self.config[self.channelsConfigName] = self.dacChannels
@@ -109,7 +110,7 @@ class DACUi(dacForm, dacBase):
             if self.DACClass == DAC:
                 self.dac.setVoltage(0, self.dacChannels[0].outputVoltage, autoApply=True, applyAll=True )
             else:
-                self.onWriteAll()  # Apply is meaningless unless we want to send an "update" message or pulse somewhere.
+                self.onWriteAll()  # Apply is meaningless for MEMS unless we want to send an "update" message or pulse somewhere.
         
     def onReset(self):
         #self.dac.reset(0xff)

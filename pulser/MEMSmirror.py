@@ -6,7 +6,6 @@
 
 import logging
 import struct
-from time import sleep, clock
 
 #from pulser.PulserHardwareClient import check
 from modules.quantity import Q
@@ -113,14 +112,9 @@ class MEMSmirror:
         return intVoltage
 
     def flush(self):
-        # If writes happen too quick, messages seem to get lost. This is a hack to help
-        # not do that.
-        if clock() - self.lastFlush < 0.1:
-            sleep(0.1)
-        self.lastFlush = clock()
-
         self.pulser.setMultipleExtendedWireIn(self.commandBuffer)
         self.commandBuffer = list()
+
 
     def sendCommand(self, channel, cmd, data):
         if self.pulser:
@@ -136,10 +130,6 @@ class MEMSmirror:
         pass
 
     def reset(self, mems):
-        # print("numChannels = {0}".format(self.numChannels))
-        # for j in range(self.numChannels):
-        #     print("j = {0}".format(j))
-        #     self.setVoltage(j, Q(0, 'V'))
         if self.numChannels > 0:
             with self.combineWrites(mems) as stream:
                 for mirror in range(self.numChannels):
