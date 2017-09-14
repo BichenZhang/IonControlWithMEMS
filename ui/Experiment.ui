@@ -114,6 +114,7 @@
     </property>
     <addaction name="actionLogic"/>
     <addaction name="actionVoltageControl"/>
+    <addaction name="actionMEMSVoltages"/>
     <addaction name="actionDedicatedCounters"/>
     <addaction name="actionPulses"/>
     <addaction name="actionMeasurementLog"/>
@@ -693,6 +694,14 @@
    </property>
    <property name="iconVisibleInMenu">
     <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionMEMSVoltages">
+   <property name="text">
+    <string>MEMS Voltages</string>
+   </property>
+   <property name="toolTip">
+    <string>MEMS Voltages for Pulse Program</string>
    </property>
   </action>
  </widget>

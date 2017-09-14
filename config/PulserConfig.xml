@@ -1950,6 +1950,7 @@
         <MEMSMirror mirrorNo="2" channel="16"/>
         <MEMSMirror mirrorNo="3" channel="16"/>
     </MEMSMirrors>
+		<Ions numChannels="20" encoding="None"/>
 		<DAC numChannels="16" encoding="DAC8568_VOLTAGE" />
 		<ADC numChannels="8" encoding="ADC7606_VOLTAGE" dedicatedfirstChannelNo="16" />
 	</Pulser>

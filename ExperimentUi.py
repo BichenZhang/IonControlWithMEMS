@@ -62,6 +62,7 @@ from AWG.AWGUi import AWGUi
 from AWG import AWGDevices
 from pulser.DAC import DAC
 from pulser.MEMSmirror import MEMSmirror
+from pulser.MemsPositionsUi import MemsPositionsUi
 
 setID = ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID
 if __name__=='__main__': #imports that aren't just definitions
@@ -114,6 +115,7 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
         self.dbConnection = project.dbConnection
         self.objectListToSaveContext = list()
         self.voltageControlWindow = None
+        self.MemsPositionsWindow = None
 
         localpath = getProject().configDir+'/UserFunctions/'
         userFuncLoader(localpath)
@@ -193,6 +195,7 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
         if self.MEMSEnabled:
             try:
                 import pulser.MEMSmirror
+                import pulser.MemsPositionsUi
             except ImportError:
                 importErrorPopup('MEMS mirrors')
 
@@ -409,6 +412,11 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
         else:
             self.actionVoltageControl.setDisabled(True)
             self.actionVoltageControl.setVisible(False)
+        if self.MEMSEnabled:
+            self.actionMEMSVoltages.triggered.connect(self.onMEMSVoltages)
+        else:
+            self.actionMEMSVoltages.setDisabled(True)
+            self.actionMEMSVoltages.setVisible(False)
         self.actionScripting.triggered.connect(self.onScripting)
         self.actionUserFunctions.triggered.connect(self.onUserFunctionsEditor)
         self.actionMeasurementLog.triggered.connect(self.onMeasurementLog)
@@ -454,6 +462,14 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
             if self.voltageControlWindow:
                 self.tabDict["Scan"].ppStartSignal.connect( self.voltageControlWindow.synchronize )   # upload shuttling data before running pule program
                 self.dedicatedCountersWindow.autoLoad.setVoltageControl( self.voltageControlWindow )
+
+        if self.MEMSEnabled:
+            self.MemsPositionsWindow = MemsPositionsUi(self.pulser, self.config, "MemsPositionsUi", self.globalVariablesUi.globalDict)
+            self.MemsPositionsWindow.setupUi(self.MemsPositionsWindow)
+        else:
+            self.MemsPositionsWindow = None
+            self.actionMEMSVoltages.setDisabled( True )
+            #logger.warning("Error in MEMS Position Voltages: {0}".format(str(e)))
 
         self.setWindowTitle("Experimental Control ({0})".format(self.project) )
 
@@ -581,6 +597,11 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
         self.voltageControlWindow.show()
         self.voltageControlWindow.setWindowState(QtCore.Qt.WindowActive)
         self.voltageControlWindow.raise_()
+
+    def onMEMSVoltages(self):
+        self.MemsPositionsWindow.show()
+        self.MemsPositionsWindow.setWindowState(QtCore.Qt.WindowActive)
+        self.MemsPositionsWindow.raise_()
 
     def onScripting(self):
         self.scriptingWindow.show()
@@ -744,6 +765,8 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
         self.measurementLog.close()
         if self.voltagesEnabled:
             self.voltageControlWindow.close()
+        if self.MEMSEnabled:
+            self.MemsPositionsWindow.close()
         for awgUi in self.AWGUiDict.values():
             awgUi.close()
         numTempAreas = len(self.scanExperiment.area.tempAreas)
@@ -779,6 +802,9 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
         if self.voltagesEnabled:
             if self.voltageControlWindow:
                 self.voltageControlWindow.saveConfig()
+        if self.MEMSEnabled:
+            if self.MemsPositionsWindow:
+                self.MemsPositionsWindow.saveConfig()
         self.ExternalParametersSelectionUi.saveConfig()
         self.globalVariablesUi.saveConfig()
         self.loggerUi.saveConfig()
@@ -851,6 +877,13 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
             voltageControlWindowVisible = getattr(self.voltageControlWindow.settings, 'isVisible', False)
             if voltageControlWindowVisible: self.voltageControlWindow.show()
             else: self.voltageControlWindow.hide()
+
+        if self.MEMSEnabled:
+            MemsPositionsWindowVisible = getattr(self.MemsPositionsWindow.settings, 'isVisible', False)
+            if MemsPositionsWindowVisible:
+                self.MemsPositionsWindow.show()
+            else:
+                self.MemsPositionsWindow.hide()
 
         if self.AWGUiDict:
             for awgUi in self.AWGUiDict.values():

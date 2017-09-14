@@ -16,11 +16,11 @@ from gui.ExpressionValue import ExpressionValue
 from modules.descriptor import SetterProperty
 
 
-class DACException(Exception):
+class MemsPositionsException(Exception):
     pass
 
 
-class DACChannelSetting(object):
+class MemsPositionsSetting(object):
     expression = Expression()
     def __init__(self, globalDict=None ):
         self._globalDict = None
@@ -41,7 +41,7 @@ class DACChannelSetting(object):
         
     @property
     def outputVoltage(self):
-        return self._voltage.value if self.enabled else Q(0, 'V')
+        return self._voltage.value
 
     @property
     def globalDict(self):
@@ -73,65 +73,20 @@ class DACChannelSetting(object):
         self._voltage.valueChanged.connect(onChange)
 
 
-class CombineWrites:
-    def __init__(self, dac):
-        self.restoreValue = True
-        self.dac = dac
-
-    def __enter__(self):
-        self.restoreValue = self.dac.autoFlush
-        self.dac.autoFlush = False
-        return self.dac
-
-    def __exit__(self, exittype, value, traceback):
-        self.dac.autoFlush = self.restoreValue
-        self.dac.flush()
-
-
-class DAC:
-    dacChannelSetting = DACChannelSetting
-    combineWrites = CombineWrites
+class MemsPositions:
+    memsPositionsSetting = MemsPositionsSetting
 
     def __init__(self, pulser):
         self.commandBuffer = list()
         self.autoFlush = True
         self.pulser = pulser
         config = self.pulser.pulserConfiguration()
-        self.numChannels = config.dac.numChannels if config else 0
-        self.dacInfo = config.dac if config else DAADInfo() 
-        self.sendCommand(0, 7, 1) # enable internal reference
-        self.sendCommand(0, 7, 1) # enable internal reference works if done twice, don't ask me why
-        # ^ I think this duplication can be removed now due to a bug fix in the firmware. - Rachel Noek, July 2017
+        self.numIons = config.ions.numChannels if config else 0
+        self.ionInfo = config.ions if config else DAADInfo()
 
-    def rawToMagnitude(self, raw):
-        return decode( raw, self.dacInfo.encoding )
-
-    def setVoltage(self, channel, voltage, autoApply=False, applyAll=False):
-        intVoltage = encode( voltage, self.dacInfo.encoding )
-        code =  (2 if applyAll else 3) if autoApply else 0
-        self.sendCommand(channel, code, intVoltage)
+    def setVoltage(self, channel, voltage):
+        intVoltage = encode(voltage, 'MEMS_VOLTAGE')
         return intVoltage
 
-    def flush(self):
-        self.pulser.setMultipleExtendedWireIn(self.commandBuffer)
-        self.commandBuffer = list()
-
-    def sendCommand(self, channel, cmd, data):
-        logger = logging.getLogger(__name__)
-        if self.pulser:
-            self.commandBuffer.extend([(0x12, data),
-                                       (0x1e, (1 << 14) | (channel & 0xff) << 4 | (cmd & 0xf))])
-            if self.autoFlush:
-                self.flush()
-        else:
-            logger.warning( "Pulser not available" )
-            
-    def update(self, channelmask):
-        pass
-
-    def reset(self, dac):
-        pass  # for now do nothing... but needs to be defined
-        
-        
 if __name__ == "__main__":
-    ad = DAC(None)
+    ad = MemsPositions(None)

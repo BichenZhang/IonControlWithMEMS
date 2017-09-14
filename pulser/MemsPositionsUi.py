@@ -18,6 +18,8 @@ from uiModules.MagnitudeSpinBoxDelegate import MagnitudeSpinBoxDelegate
 from modules.GuiAppearance import restoreGuiState, saveGuiState 
 import logging
 from modules.Utility import unique
+from pulser.PulserConfig import DAADInfo
+from pulser.MemsPositions import MemsPositions
 
 import os
 uipath = os.path.join(os.path.dirname(__file__), '..', 'ui/MemsPositions.ui')
@@ -54,42 +56,34 @@ class MemsPositionSettings(object):
         self.__dict__ = state
         self.__dict__.setdefault('ion', None)
 
-    def evaluateFrequency(self, globalDict ):
-        if self.frequencyText:
-            oldfreq = self.frequency
-            self.frequency = self.expression.evaluateAsMagnitude(self.frequencyText, globalDict)
-            return self.frequency!=oldfreq
-        return False
-
+class Settings:
+    pass
 
 class MemsPositionsUi(MemsPositionsForm, MemsPositionsBase):
     def __init__(self, pulser, config, configName='MemsPositionsUi', globalDict=dict(), parent=None):
+        self.persistSpace = 'MEMSPositions'
         MemsPositionsBase.__init__(self, parent)
         MemsPositionsForm.__init__(self)
-        if pulser.pulserConfiguration():
-            self.ionInfo = sorted(list(pulser.pulserConfiguration().memsions.values()), key=lambda x: x.ion)
-        else:
-            self.ionInfo = []
-        self.numions = len(self.ionInfo)
+
         self.config = config
-        self.ionConfigName = '{0}.memsions'.format(configName)
-        # self.autoApplyConfigName = '{0}.autoApply'.format(configName)
+        self.memsPositions = MemsPositions(pulser)
+        self.channelsConfigName = '{0}.memsPositionsExpressionConfigName'.format(configName)
         self.guiStateConfigName = '{0}.guiState'.format(configName)
-        oldmemsions = self.config.get(self.ionConfigName, [])
-        self.memsions = [oldmemsions[i] if i < len(oldmemsions) else memsionSettings() for i in range(self.numions)]
-        # self.autoApply = self.config.get(self.autoApplyConfigName, True)
+        self.memsPositionsChannels = self.config.get(self.channelsConfigName)
+        if not self.memsPositionsChannels or len(self.memsPositionsChannels) != self.memsPositions.numIons:
+            self.memsPositionsChannels = [MemsPositions.memsPositionsSetting(globalDict=globalDict) for _ in range(self.memsPositions.numIons)]
+        for index, channel in enumerate(self.memsPositionsChannels):
+            channel.globalDict = globalDict
+            channel.onChange = partial(self.onChange, index)
         self.decimation = defaultdict(lambda: StaticDecimation(Q(30, 's')))
         self.persistence = DBPersist()
         self.globalDict = globalDict
         self.pulser = pulser
-        self.persistSpace = 'MEMS'
-        for index, ioninfo in enumerate(self.ionInfo):
-            self.memsions[index].ion = ioninfo.ion
-            self.memsions[index].shutter = ioninfo.shutter
+
 
     def setupUi(self, parent):
         MemsPositionsForm.setupUi(self, parent)
-        self.MemsPositionsTableModel = MemsPositionsTableModel(self.memsions, self.globalDict)
+        self.MemsPositionsTableModel = MemsPositionsTableModel(self.memsPositions, self.globalDict)
         self.tableView.setModel( self.MemsPositionsTableModel )
         self.delegate = MagnitudeSpinBoxDelegate(self.globalDict)
         self.tableView.setItemDelegateForColumn(0, self.delegate)
@@ -101,16 +95,22 @@ class MemsPositionsUi(MemsPositionsForm, MemsPositionsBase):
         self.tableView.setItemDelegateForColumn(6, self.delegate)
         self.tableView.setItemDelegateForColumn(7, self.delegate)
 
-        self.okButton.clicked.connect( self.onOk )
-        self.cancelButton.clicked.connect( self.onCancel )
+        self.accepted.connect( self.onOk )
+        self.rejected.connect( self.onCancel )
 
-        # self.MemsPositionsTableModel.frequencyChanged.connect( self.onFrequency )
-        # self.MemsPositionsTableModel.phaseChanged.connect( self.onPhase )
-        # self.MemsPositionsTableModel.amplitudeChanged.connect( self.onAmplitude )
-        # self.MemsPositionsTableModel.enableChanged.connect( self.onEnableChanged )
-        # self.MemsPositionsTableModel.squareChanged.connect( self.onSquareChanged )
-        # self.pulser.shutterChanged.connect( self.onShutterChanged )
+        if hasattr(self.settings, 'state'):
+            self.restoreState( self.settings.state )
         restoreGuiState(self, self.config.get(self.guiStateConfigName))
+
+    def onChange(self, index, name, value, string, origin ):
+        if self.isSetup and origin != 'value':
+            self.MemsPositionsTableModel.setVoltage(self.MemsPositionsTableModel.createIndex(index, 2), value)
+
+    def evaluate(self, name):  # used on global variable update
+        for channel, settings in enumerate(self.memsPositionsChannels):
+            if settings.evaluateVoltage( self.globalDict ):
+                self.memsPositions.setVoltage(channel, settings.outputVoltage)
+        self.tableView.viewport().repaint()
 
     def persistCallback(self, source, data):
         time, value, minval, maxval = data
@@ -120,23 +120,26 @@ class MemsPositionsUi(MemsPositionsForm, MemsPositionsBase):
         self.persistence.persist(self.persistSpace, source, time, value, minval, maxval, unit)
 
     def saveConfig(self):
-        self.config[self.ionConfigName] = self.memsions
-        self.config[self.autoApplyConfigName] = self.autoApply
+        self.config[self.channelsConfigName] = self.memsPositionsChannels
+        self.settings.isVisible = self.isVisible()
+        self.config[self.configname] = self.settings
         self.config[self.guiStateConfigName] = saveGuiState(self)
         
     def onOk(self):
-        pass
+        self.saveConfig()
+        # update globals
         ## Save all values to globals.
         # ionObj = self.memsions[ion]
         # ion = ionObj.ion
-        # self.ad9912.setFrequency(ion, value)
-        # if self.autoApply: self.onApply()
         # self.decimation[(0, ion)].decimate(time.time(), value, partial(self.persistCallback, "Frequency:{0}".format(
         #     ionObj.name if ionObj.name else ion)))
 
     def onCancel(self):
         pass
         # close window (don't save values)
+
+    def closeEvent(self, e):
+        self.onCancel()
 
     # def evaluate(self, name):
     #     for setting in self.memsions:
