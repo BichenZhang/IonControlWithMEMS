@@ -3,7 +3,7 @@
 # This Software is released under the GPL license detailed
 # in the file "license.txt" in the top-level IonControl directory
 # *****************************************************************
-from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 import PyQt5.uic
 
 from externalParameter.persistence import DBPersist
@@ -40,6 +40,7 @@ class DACUi(dacForm, dacBase):
         self.autoApplyConfigName = '{0}.autoApply'.format(configName)
         self.guiStateConfigName = '{0}.guiState'.format(configName)
         self.dacChannels = self.config.get(self.channelsConfigName)
+        self.dacChannels = None
         if not self.dacChannels or len(self.dacChannels)!=self.dac.numChannels:
             self.dacChannels = [DACClass.dacChannelSetting(globalDict=globalDict) for _ in range(self.dac.numChannels) ]
         for index, channel in enumerate(self.dacChannels):
@@ -113,7 +114,6 @@ class DACUi(dacForm, dacBase):
                 self.onWriteAll()  # Apply is meaningless for MEMS unless we want to send an "update" message or pulse somewhere.
         
     def onReset(self):
-        #self.dac.reset(0xff)
         self.dac.reset(self.dac)
 
     def onChange(self, index, name, value, string, origin ):

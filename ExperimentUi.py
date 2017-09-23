@@ -464,8 +464,9 @@ class ExperimentUi(WidgetContainerBase,WidgetContainerForm):
                 self.dedicatedCountersWindow.autoLoad.setVoltageControl( self.voltageControlWindow )
 
         if self.MEMSEnabled:
-            self.MemsPositionsWindow = MemsPositionsUi(self.pulser, self.config, "MemsPositionsUi", self.globalVariablesUi.globalDict)
+            self.MemsPositionsWindow = MemsPositionsUi(self.pulser, self.config, "MemsPositionsUi", self.globalVariablesUi.globalDict, self.globalVariablesUi.model)
             self.MemsPositionsWindow.setupUi(self.MemsPositionsWindow)
+            self.globalVariablesUi.valueChanged.connect(self.MemsPositionsWindow.evaluate)
         else:
             self.MemsPositionsWindow = None
             self.actionMEMSVoltages.setDisabled( True )

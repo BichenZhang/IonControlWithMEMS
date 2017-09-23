@@ -71,6 +71,12 @@ class MEMSMirrorSetting(object):
     def onChange(self, onChange):
         self._voltage.valueChanged.connect(onChange)
 
+    def evaluateVoltage(self, globalDict):
+        if self.voltageText:
+            oldVoltage = self.voltage
+            self.voltage = self.expression.evaluateAsMagnitude(self.voltageText, globalDict)
+            return self.voltage != oldVoltage
+        return False
 
 class CombineWrites:
     def __init__(self, mems):
