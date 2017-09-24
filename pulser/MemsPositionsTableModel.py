@@ -9,7 +9,7 @@ from functools import partial
 from pulser import MemsPositions
 
 class MemsPositionsTableModel(QtCore.QAbstractTableModel):
-    headerDataLookup = ['Ion #', 'x1', 'x1c', 'y1', 'y1c', 'x2', 'x2c', 'y2', 'y2c']
+    headerDataLookup = ['Ion #', 'x1', 'x1 cal.', 'y1', 'y1 cal.', 'x2', 'x2 cal.', 'y2', 'y2 cal.']
 
     x1Changed = QtCore.pyqtSignal(object, object)
     x1cChanged = QtCore.pyqtSignal(object, object)
@@ -24,8 +24,8 @@ class MemsPositionsTableModel(QtCore.QAbstractTableModel):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
         # scanNames are given as a SortedDict
         self.memsPositionsChannels = memsPositionsChannels
-        self.defaultBG = QtGui.QColor(QtCore.Qt.white)
-        self.textBG = QtGui.QColor(QtCore.Qt.green).lighter(175)
+        # self.defaultBG = QtGui.QColor(QtCore.Qt.white)
+        # self.textBG = QtGui.QColor(QtCore.Qt.green).lighter(175)
 
         n = 0
         self.dataLookup = {  (QtCore.Qt.DisplayRole, n): lambda row: str(row+1),
@@ -47,14 +47,14 @@ class MemsPositionsTableModel(QtCore.QAbstractTableModel):
                              (QtCore.Qt.EditRole, n+7): lambda row: firstNotNone(self.memsPositionsChannels[row].y2Text, str(self.memsPositionsChannels[row].y2)),
                              (QtCore.Qt.EditRole, n+8): lambda row: firstNotNone(self.memsPositionsChannels[row].y2cText, str(self.memsPositionsChannels[row].y2c)),
 
-                             (QtCore.Qt.BackgroundColorRole, n+1): lambda row: self.defaultBG if self.memsPositionsChannels[row].x1Text is None else self.textBG,
-                             (QtCore.Qt.BackgroundColorRole, n+2): lambda row: self.defaultBG if self.memsPositionsChannels[row].x1cText is None else self.textBG,
-                             (QtCore.Qt.BackgroundColorRole, n+3): lambda row: self.defaultBG if self.memsPositionsChannels[row].y1Text is None else self.textBG,
-                             (QtCore.Qt.BackgroundColorRole, n+4): lambda row: self.defaultBG if self.memsPositionsChannels[row].y1cText is None else self.textBG,
-                             (QtCore.Qt.BackgroundColorRole, n+5): lambda row: self.defaultBG if self.memsPositionsChannels[row].x2Text is None else self.textBG,
-                             (QtCore.Qt.BackgroundColorRole, n+6): lambda row: self.defaultBG if self.memsPositionsChannels[row].x2cText is None else self.textBG,
-                             (QtCore.Qt.BackgroundColorRole, n+7): lambda row: self.defaultBG if self.memsPositionsChannels[row].y2Text is None else self.textBG,
-                             (QtCore.Qt.BackgroundColorRole, n+8): lambda row: self.defaultBG if self.memsPositionsChannels[row].y2cText is None else self.textBG,
+                             # (QtCore.Qt.BackgroundColorRole, n+1): lambda row: self.defaultBG if self.memsPositionsChannels[row].x1Text is None else self.textBG,
+                             # (QtCore.Qt.BackgroundColorRole, n+2): lambda row: self.defaultBG if self.memsPositionsChannels[row].x1cText is None else self.textBG,
+                             # (QtCore.Qt.BackgroundColorRole, n+3): lambda row: self.defaultBG if self.memsPositionsChannels[row].y1Text is None else self.textBG,
+                             # (QtCore.Qt.BackgroundColorRole, n+4): lambda row: self.defaultBG if self.memsPositionsChannels[row].y1cText is None else self.textBG,
+                             # (QtCore.Qt.BackgroundColorRole, n+5): lambda row: self.defaultBG if self.memsPositionsChannels[row].x2Text is None else self.textBG,
+                             # (QtCore.Qt.BackgroundColorRole, n+6): lambda row: self.defaultBG if self.memsPositionsChannels[row].x2cText is None else self.textBG,
+                             # (QtCore.Qt.BackgroundColorRole, n+7): lambda row: self.defaultBG if self.memsPositionsChannels[row].y2Text is None else self.textBG,
+                             # (QtCore.Qt.BackgroundColorRole, n+8): lambda row: self.defaultBG if self.memsPositionsChannels[row].y2cText is None else self.textBG,
                              }
 
         self.setDataLookup = { (QtCore.Qt.EditRole, n+1): self.setx1,

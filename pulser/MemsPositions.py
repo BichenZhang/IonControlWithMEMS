@@ -10,7 +10,7 @@ import struct
 from pulser.PulserHardwareClient import check
 from modules.quantity import Q
 from modules.Expression import Expression
-from pulser.Encodings import encode, decode
+from pulser.Encodings import encode
 from pulser.PulserConfig import DAADInfo
 from gui.ExpressionValue import ExpressionValue
 from modules.descriptor import SetterProperty
@@ -43,10 +43,6 @@ class MemsPositionsSetting(object):
         dictcopy = dict(self.__dict__)
         dictcopy.pop('_globalDict', None)
         return dictcopy
-        
-    @property
-    def outputVoltage(self):
-        return self._voltage.value
 
     @property
     def globalDict(self):
@@ -229,10 +225,6 @@ class MemsPositionsSetting(object):
             newx1 = self.expression.evaluateAsMagnitude(self.x1Text, globalDict)
             if newx1 != self.x1:
                 self.x1 = newx1
-                return True
-            #oldx1 = self.x1
-            #self.x1 = self.expression.evaluateAsMagnitude(self.x1Text, globalDict)
-            #return self.x1!=oldx1
         return False
 
     def evaluatex1c(self, globalDict):
@@ -241,10 +233,6 @@ class MemsPositionsSetting(object):
             if newx1c != self.x1c:
                 self.x1c = newx1c
                 return True
-
-            #oldx1c = self.x1c
-            #self.x1c = self.expression.evaluateAsMagnitude(self.x1cText, globalDict)
-            #return self.x1c!=oldx1c
         return False
 
     def evaluatey1(self, globalDict):
@@ -253,10 +241,6 @@ class MemsPositionsSetting(object):
             if newy1 != self.y1:
                 self.y1 = newy1
                 return True
-
-            #oldy1 = self.y1
-            ##self.y1 = self.expression.evaluateAsMagnitude(self.y1Text, globalDict)
-            #return self.y1!=oldy1
         return False
 
     def evaluatey1c(self, globalDict):
@@ -265,10 +249,6 @@ class MemsPositionsSetting(object):
             if newy1c != self.y1c:
                 self.y1c = newy1c
                 return True
-
-            #oldy1c = self.y1c
-            #self.y1c = self.expression.evaluateAsMagnitude(self.y1cText, globalDict)
-            #return self.y1c!=oldy1c
         return False
 
     def evaluatex2(self, globalDict):
@@ -277,10 +257,6 @@ class MemsPositionsSetting(object):
             if newx2 != self.x2:
                 self.x2 = newx2
                 return True
-
-            #oldx2 = self.x2
-            #self.x2 = self.expression.evaluateAsMagnitude(self.x2Text, globalDict)
-            #return self.x2!=oldx2
         return False
 
     def evaluatex2c(self, globalDict):
@@ -289,10 +265,6 @@ class MemsPositionsSetting(object):
             if newx2c != self.x2c:
                 self.x2c = newx2c
                 return True
-
-            #oldx2c = self.x2c
-            ###self.x2c = self.expression.evaluateAsMagnitude(self.x2cText, globalDict)
-            #return self.x2c!=oldx2c
         return False
 
     def evaluatey2(self, globalDict):
@@ -301,10 +273,6 @@ class MemsPositionsSetting(object):
             if newy2 != self.y2:
                 self.y2 = newy2
                 return True
-
-            #oldy2 = self.y2
-            #self.y2 = self.expression.evaluateAsMagnitude(self.y2Text, globalDict)
-            #return self.y2!=oldy2
         return False
 
     def evaluatey2c(self, globalDict):
@@ -313,10 +281,6 @@ class MemsPositionsSetting(object):
             if newy2c != self.y2c:
                 self.y2c = newy2c
                 return True
-
-            #oldy2c = self.y2c
-            #self.y2c = self.expression.evaluateAsMagnitude(self.y2cText, globalDict)
-            #return self.y2c!=oldy2c
         return False
 
 class MemsPositions:
