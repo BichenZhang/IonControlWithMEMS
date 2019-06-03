@@ -78,7 +78,7 @@ class MotionalRabiFlopping(FitFunctionBase):
         eta = (2 * pi / wavelength.m_as('m') * cos(angle * pi / 180)
                * sqrt(constants.hbar / (2 * m * 2 * pi * secfreq)))
         self.results['eta'] = ResultRecord( name='eta', value=eta )
-               
+
     def updateTables(self, nBar):
         _, _, _, mass, angle, trapFrequency, wavelength, delta_n = self.parameters #@UnusedVariable
         if not is_Q(trapFrequency):
@@ -91,7 +91,7 @@ class MotionalRabiFlopping(FitFunctionBase):
                * sqrt(constants.hbar / (2 * m * 2 * pi * secfreq)))
         self.laguerreTable = laguerreTable(eta, delta_n)
         self.pnTable = probabilityTable(nBar)
-            
+
     def residuals(self, p, y, x, sigma):
         A, n, omega, _, _, _, _, _ = self.allFitParameters(self.parameters if p is None else p) #@UnusedVariable
         self.updateTables(n)
@@ -108,7 +108,7 @@ class MotionalRabiFlopping(FitFunctionBase):
             return (y-result)/sigma
         else:
             return y-result
-        
+
     def value(self,x,p=None):
         A, n, omega, mass, angle, trapFrequency, wavelength, delta_n = self.parameters if p is None else p  #@UnusedVariable
         self.updateTables(n)
@@ -122,7 +122,7 @@ class MotionalRabiFlopping(FitFunctionBase):
             valueList = sin(omega * self.laguerreTable * x)**2
             result = A*dot( self.pnTable, valueList )
         return result
-                
+
      
      
      
@@ -193,6 +193,88 @@ class TwoModeMotionalRabiFlopping(FitFunctionBase):
             valueList = sin(omega * outer( self.laguerreTable, self.laguerreTable2).flatten()  * x)**2
             result = A*dot( outer( self.pnTable, self.pnTable2).flatten(), valueList )
         return result
+
+
+class MotionalRabiFloppingOffset(FitFunctionBase):
+    name = "MotionalRabiFloppingOffset"
+    functionString = 'Motional Rabi Flopping with Offset'
+    parameterNames = ['A', 'Offset', 'n', 'rabiFreq', 'mass', 'angle', 'trapFrequency', 'wavelength', 'delta_n']
+
+    def __init__(self):
+        FitFunctionBase.__init__(self)
+        self.parameters = [1.0, 0.0, 7.0, 0.28, 40, 0, 1.578, 729, 0.0]
+        self.startParameters = [1.0, 0.0, 7.0, 0.28, 40, 0, Q(1.578, 'MHz'), Q(729, 'nm'), 0.0]
+        self.units = [None, None, None, None, None, None, 'MHz', 'nm', None]
+        self.parameterEnabled = [True, True, True, True, False, False, False, False, False]
+        self.parametersConfidence = [None] * 9
+        # constants
+        self.results['eta'] = ResultRecord(name='eta', value=0)
+        self.update()
+        self.laguerreCacheEta = -1
+        self.laguerreTable = None
+        self.pnCache_nBar = -1
+        self.pnTable = None
+
+    def update(self, parameters=None):
+        A, Offset, n, omega, mass, angle, trapFrequency, wavelength, delta_n = self.parameters if parameters is None else parameters  # @UnusedVariable
+        m = mass * constants.m_p
+        if not is_Q(trapFrequency):
+            trapFrequency = Q(trapFrequency, 'MHz')
+        if not is_Q(wavelength):
+            wavelength = Q(wavelength, 'nm')
+        secfreq = trapFrequency.m_as('Hz')
+        eta = (2 * pi / wavelength.m_as('m') * cos(angle * pi / 180)
+               * sqrt(constants.hbar / (2 * m * 2 * pi * secfreq)))
+        self.results['eta'] = ResultRecord(name='eta', value=eta)
+
+    def updateTables(self, nBar):
+        _, _, _, _, mass, angle, trapFrequency, wavelength, delta_n = self.parameters  # @UnusedVariable
+        if not is_Q(trapFrequency):
+            trapFrequency = Q(trapFrequency, 'MHz')
+        if not is_Q(wavelength):
+            wavelength = Q(wavelength, 'nm')
+        secfreq = trapFrequency.m_as('Hz')
+        m = mass * constants.m_p
+        eta = (2 * pi / wavelength.m_as('m') * cos(angle * pi / 180)
+               * sqrt(constants.hbar / (2 * m * 2 * pi * secfreq)))
+        self.laguerreTable = laguerreTable(eta, delta_n)
+        self.pnTable = probabilityTable(nBar)
+
+    def residuals(self, p, y, x, sigma):
+        A, Offset, n, omega, _, _, _, _, _ = self.allFitParameters(
+            self.parameters if p is None else p)  # @UnusedVariable
+        self.updateTables(n)
+        if hasattr(x, '__iter__'):
+            result = list()
+            for xn in x:
+                valueList = sin((omega * xn) * self.laguerreTable) ** 2
+                value = Offset + A * dot(self.pnTable, valueList)
+                result.append(value)
+        else:
+            valueList = sin(omega * self.laguerreTable * x) ** 2
+            result = Offset + A * dot(self.pnTable, valueList)
+        if sigma is not None:
+            return (y - result) / sigma
+        else:
+            return y - result
+
+    def value(self, x, p=None):
+        A, Offset, n, omega, mass, angle, trapFrequency, wavelength, delta_n = self.parameters if p is None else p  # @UnusedVariable
+        self.updateTables(n)
+        if hasattr(x, '__iter__'):
+            result = list()
+            for xn in x:
+                valueList = sin((omega * xn) * self.laguerreTable) ** 2
+                value = Offset + A * dot(self.pnTable, valueList)
+                result.append(value)
+        else:
+            valueList = sin(omega * self.laguerreTable * x) ** 2
+            result = Offset + A * dot(self.pnTable, valueList)
+        return result
+
+
+
+
                 
         
    

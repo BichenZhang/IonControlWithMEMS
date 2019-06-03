@@ -51,3 +51,22 @@ class SelectMax(FitFunctionBase):
             parameters = [float(param) for param in self.startParameters]
         self.parameters = [x[numpy.argmax(y)], numpy.max(y)]
         return self.parameters
+
+class SelectMin(FitFunctionBase):
+    name = "SelectMinValue"
+    functionString =  'Choose min value'
+    parameterNames = [ 'xAtMinValue', 'Min' ]
+    def __init__(self):
+        FitFunctionBase.__init__(self)
+        self.parameters = [0.0, 0.0]
+        self.startParameters = [0.0, 0.0]
+
+    def value(self,x,p=None):
+        v,m  = self.parameters if p is None else p
+        return numpy.array( [m for _ in range(len(x))] )
+
+    def leastsq(self, x, y, parameters=None, sigma=None):
+        if parameters is None:
+            parameters = [float(param) for param in self.startParameters]
+        self.parameters = [x[numpy.argmin(y)], numpy.min(y)]
+        return self.parameters
