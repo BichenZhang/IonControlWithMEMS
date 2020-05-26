@@ -49,6 +49,7 @@ class Script(QtCore.QThread):
     stopScanSignal = QtCore.pyqtSignal()
     
     setGlobalSignal = QtCore.pyqtSignal(str, float, str) #args: name, value, unit
+    #setGlobalSignalInt = QtCore.pyqtSignal(str, int, str)  # args: name, value, unit
     addGlobalSignal = QtCore.pyqtSignal(str, float, str) #args: name, value, unit
     startScanSignal = QtCore.pyqtSignal(list)  # args: globalOverrides list
     setScanSignal = QtCore.pyqtSignal(str) #arg: scan name
@@ -224,6 +225,7 @@ class Script(QtCore.QThread):
         Raises:
             ScriptException: if there is not a global with the given name. This is to avoid typos leading to unexpected behavior. To add a global, use 'addGlobal'"""
         self.setGlobalSignal.emit(name, value, unit)
+
 
     @scriptFunction(waitForGui=False)
     def getGlobal(self, name):

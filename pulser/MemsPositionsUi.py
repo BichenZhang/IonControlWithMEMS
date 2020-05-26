@@ -216,13 +216,17 @@ class MemsPositionsUi(MemsPositionsForm, MemsPositionsBase):
             rows = range(0, self.memsPositions.numIons)
         for j in rows:
             try:
-                ch0V = self.memsPositionsChannels[j].x1 + self.memsPositionsChannels[j].x1c
-                ch1V = self.memsPositionsChannels[j].y1 + self.memsPositionsChannels[j].y1c
-                ch2V = self.memsPositionsChannels[j].x2 + self.memsPositionsChannels[j].x2c
-                ch3V = self.memsPositionsChannels[j].y2 + self.memsPositionsChannels[j].y2c
+                ch0V = 0*self.memsPositionsChannels[j].x1 + 0*self.memsPositionsChannels[j].x1c
+                ch1V = 0*self.memsPositionsChannels[j].y1 + 0*self.memsPositionsChannels[j].y1c
+                ch2V = 0*self.memsPositionsChannels[j].x2 + 0*self.memsPositionsChannels[j].x2c
+                ch3V = 0*self.memsPositionsChannels[j].y2 + 0*self.memsPositionsChannels[j].y2c
+                #ch0Vint = encode(0, 'MEMS_VOLTAGE')
                 ch0Vint = encode(ch0V, 'MEMS_VOLTAGE')
+                #ch1Vint = encode(0, 'MEMS_VOLTAGE')
                 ch1Vint = encode(ch1V, 'MEMS_VOLTAGE')
+                #ch2Vint = encode(0, 'MEMS_VOLTAGE')
                 ch2Vint = encode(ch2V, 'MEMS_VOLTAGE')
+                #ch3Vint = encode(0, 'MEMS_VOLTAGE')
                 ch3Vint = encode(ch3V, 'MEMS_VOLTAGE')
                 ch0V = int(round(2 ** 15 * (ch0V.m_as('V') / 10)))
                 ch1V = int(round(2 ** 15 * (ch1V.m_as('V') / 10)))
